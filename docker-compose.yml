@@ -1,10 +1,11 @@
 x-app: &app
   build: .
-  image: localhost/uptime-monitor-app:latest
+  image: localhost/uptime-monitor-app:hardened
+  entrypoint: ["/app/.venv/bin/python"]
   environment:
+    PYTHONPATH: /app
     UPTIME_DATABASE_URL: postgresql+psycopg://uptime:uptime@db:5432/uptime
     UPTIME_CHECK_INTERVAL_SECONDS: "15"
-
 
 services:
   db:
@@ -22,23 +23,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   migrate:
     <<: *app
-    command: ["python", "-m", "uptime.migrate"]
+    command: ["-m", "uptime.migrate"]
     restart: "no"
     depends_on:
       db:
         condition: service_healthy
+
   api:
     <<: *app
+    command: ["-m", "uvicorn", "uptime.api:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
     depends_on:
       migrate:
         condition: service_completed_successfully
+
   worker:
     <<: *app
-    command: ["python", "-m", "uptime.worker"]
+    command: ["-m", "uptime.worker"]
     depends_on:
       migrate:
         condition: service_completed_successfully
