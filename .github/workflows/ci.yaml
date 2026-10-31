@@ -6,8 +6,12 @@ on:
       - main
   pull_request:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-    lint-tests:
+    lint-and-test:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -20,3 +24,32 @@ jobs:
             run: uv run ruff check .
           - name: Run Pytest
             run: uv run pytest
+    build-and-push:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v7.0.1 # we need to introducte commit SHA instead
+            
+          - name: Log in to GitHub Container Registry
+            uses: docker/login-action@v4.7.0
+            with:
+              registry: ${{ env.REGISTRY }}
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+
+          - name: Extract metadata (tags/labels) for Docker
+            id: meta
+            uses: docker/metadata-action@v6.2.0
+            with:
+              images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+              tags: |
+                type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+                type=sha,format=short
+
+          - name: Build and push Docker image
+            uses: docker/build-push-action@v7.4.0
+            with:
+              context: .
+              push: ${{ github.event_name != 'pull_request' }}
+              tags: ${{ steps.meta.outputs.tags }}
+              labels: ${{ steps.meta.outputs.labels }}
