@@ -26,6 +26,9 @@ jobs:
             run: uv run pytest
     build-and-push:
         runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          packages: write  # Enables pushing to ghcr.io
         needs: lint-and-test
         steps:
           - name: Checkout
