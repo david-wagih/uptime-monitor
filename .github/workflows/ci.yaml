@@ -50,17 +50,18 @@ jobs:
                 type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
                 type=sha,format=short
 
-          - name: Build and push Docker image
+          - name: Build Image for scanning
             uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
             with:
               context: .
               push: false
-              tags: uptime-monitor:scan
+              load: true
+              tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:scan
               labels: ${{ steps.meta.outputs.labels }}
           - name: Trivy Image Scan
             uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
             with:
-              image-ref: uptime-monitor:scan
+              image-ref:  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:scan
               severity: HIGH,CRITICAL
               ignore-unfixed: true
               exit-code: '1'
