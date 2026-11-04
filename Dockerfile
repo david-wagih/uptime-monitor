@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS builder
+FROM debian:trixie-slim AS builder
 
 # Install uv by copying the binary directly from the official image
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -22,7 +22,9 @@ ENV UV_PROJECT_ENVIRONMENT="/app/.venv"
 RUN uv python install \
     # psycopg[binary] needs libz, which distroless/cc doesn't ship
     && mkdir -p /runtime-libs \
-    && cp -L /lib/$(uname -m)-linux-gnu/libz.so.1 /runtime-libs/
+    && cp -L /lib/$(uname -m)-linux-gnu/libz.so.1 /runtime-libs/ \
+    && rm -rf /python/*/lib/python3.*/site-packages/pip* \
+          /python/*/lib/python3.*/ensurepip
 
 # Copy dependency definition files first
 COPY pyproject.toml uv.lock ./
@@ -36,7 +38,7 @@ COPY . .
 # Step 3: Install the project itself into .venv
 RUN uv sync --frozen --no-dev
 
-FROM gcr.io/distroless/cc-debian12 AS runtime
+FROM gcr.io/distroless/cc-debian13@sha256:58e12be899275afaa05f1b03051ab19037ed7f252528e57a3a9ad7e220a62578 AS runtime
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
