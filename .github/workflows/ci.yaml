@@ -55,12 +55,12 @@ jobs:
             with:
               context: .
               push: false
-              tags: ${{ steps.meta.outputs.tags }}
+              tags: uptime-monitor:scan
               labels: ${{ steps.meta.outputs.labels }}
           - name: Trivy Image Scan
             uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
             with:
-              image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
+              image-ref: uptime-monitor:scan
               severity: HIGH,CRITICAL
               ignore-unfixed: true
               exit-code: '1'
