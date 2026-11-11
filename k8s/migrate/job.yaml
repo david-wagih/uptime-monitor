@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  namespace: uptime-monitor
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: ghcr.io/david-wagih/uptime-monitor:sha-8896dbf
+        command: ["python", "-m", "uptime.migrate"]
+        env:
+        - name: UPTIME_DATABASE_URL
+          value: postgresql+psycopg://postgres:change-me@db:5432/uptime_monitor
+      restartPolicy: OnFailure

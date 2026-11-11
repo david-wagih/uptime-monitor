@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: uptime-monitor
+spec:
+  selector:
+    matchLabels:
+      app: api
+  template: # this defined the pod template
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/david-wagih/uptime-monitor:sha-8896dbf
+        env:
+        - name: UPTIME_DATABASE_URL
+          value: postgresql+psycopg://postgres:change-me@db:5432/uptime_monitor
+        - name: UPTIME_CHECK_INTERVAL_SECONDS
+          value: "15"
+        ports:
+        - containerPort: 8000

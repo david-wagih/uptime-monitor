@@ -30,6 +30,9 @@ up: ## Start the full stack (db, migrate, api, worker)
 down: ## Stop the stack (keeps data)
 	$(COMPOSE) down
 
+down-volume: ## Stop the stack and remove volumes
+	$(COMPOSE) down -v 
+
 logs: ## Follow api + worker logs
 	$(COMPOSE) logs -f api worker
 

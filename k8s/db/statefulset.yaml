@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: uptime-monitor
+spec:
+  selector:
+    matchLabels:
+      app: db
+  serviceName: db # use headless service, pods get stable network identities
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: postgres:18-alpine
+        env:
+        - name: POSTGRES_DB
+          value: uptime_monitor
+        - name: POSTGRES_PASSWORD
+          value: change-me
+        ports:
+        - containerPort: 5432
+          name: db
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql
+  volumeClaimTemplates: # PVC for persistent storage of PostgreSQL data
+  - metadata:
+      name: db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

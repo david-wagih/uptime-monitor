@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: uptime-monitor
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  template: # this defined the pod template
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: ghcr.io/david-wagih/uptime-monitor:sha-8896dbf
+        command: ["python", "-m", "uptime.worker"]
+        env:
+        - name: UPTIME_DATABASE_URL
+          value: postgresql+psycopg://postgres:change-me@db:5432/uptime_monitor
+        - name: UPTIME_CHECK_INTERVAL_SECONDS
+          value: "15"
