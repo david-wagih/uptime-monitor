@@ -12,5 +12,8 @@ spec:
         command: ["python", "-m", "uptime.migrate"]
         env:
         - name: UPTIME_DATABASE_URL
-          value: postgresql+psycopg://postgres:change-me@db:5432/uptime_monitor
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: UPTIME_DATABASE_URL
       restartPolicy: OnFailure

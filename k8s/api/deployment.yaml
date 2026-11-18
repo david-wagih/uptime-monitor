@@ -4,6 +4,7 @@ metadata:
   name: api
   namespace: uptime-monitor
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -17,8 +18,30 @@ spec:
         image: ghcr.io/david-wagih/uptime-monitor:sha-8896dbf
         env:
         - name: UPTIME_DATABASE_URL
-          value: postgresql+psycopg://postgres:change-me@db:5432/uptime_monitor
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: UPTIME_DATABASE_URL
         - name: UPTIME_CHECK_INTERVAL_SECONDS
           value: "15"
         ports:
         - containerPort: 8000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 25
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10

@@ -8,7 +8,7 @@ spec:
     matchLabels:
       app: db
   serviceName: db # use headless service, pods get stable network identities
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
