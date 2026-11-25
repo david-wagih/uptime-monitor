@@ -1,0 +1,4 @@
+# libzstd1 in distroless/cc-debian13: fixed in Debian (1.5.7+dfsg-1+deb13u1) but base image not rebuilt yet.
+# App does not use zstd directly. Remove once the distroless digest in the Dockerfile is bumped.
+# Temporary ignore, expires 2026-12-25.
+CVE-2026-124851 exp:2026-12-25

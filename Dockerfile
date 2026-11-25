@@ -38,7 +38,7 @@ COPY . .
 # Step 3: Install the project itself into .venv
 RUN uv sync --frozen --no-dev
 
-FROM gcr.io/distroless/cc-debian13@sha256:58e12be899275afaa05f1b03051ab19037ed7f252528e57a3a9ad7e220a62578 AS runtime
+FROM gcr.io/distroless/cc-debian13@sha256:95f94c4e376e82357b553707ea1b508de67776f1180b225baeefd37bd314da5f AS runtime
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \

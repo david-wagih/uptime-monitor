@@ -1,0 +1,9 @@
+uptime-monitor {{ .Chart.AppVersion }} deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Open the dashboard:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "uptime.fullname" . }}-api {{ .Values.api.service.port }}:{{ .Values.api.service.port }}
+  open http://localhost:{{ .Values.api.service.port }}
+{{- if and .Values.postgresql.enabled (eq .Values.postgresql.password "change-me") }}
+
+WARNING: postgresql.password is the default "change-me". Override it with --set postgresql.password=...
+{{- end }}

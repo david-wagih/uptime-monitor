@@ -1,0 +1,14 @@
+Today 18/11/2026
+1. fix database manifest file for replicas. [Done]
+2. liveness and readiness probes [Done]
+3. resource limits [Done]
+4. plaintext passwords fix [Done]
+
+
+25/11/2026
+Maybe another project that fits this one better
+- Helm -> Done
+- ArgoCD
+
+2/12/2026
+- Monitoring and observability

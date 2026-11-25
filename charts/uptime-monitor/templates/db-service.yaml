@@ -1,0 +1,16 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "uptime.dbHost" . }}
+  labels:
+    {{- include "uptime.labels" . | nindent 4 }}
+spec:
+  clusterIP: None # headless: stable network identity for the StatefulSet pod
+  selector:
+    {{- include "uptime.selectorLabels" (dict "ctx" . "component" "db") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+{{- end }}

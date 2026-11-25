@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 COMPOSE ?= docker compose
 
-.PHONY: help install fmt lint test check up down logs ps clean
+.PHONY: help install fmt lint test check up down logs ps clean helm-lint helm-install helm-uninstall
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -42,3 +42,18 @@ ps: ## Show running services and memory usage
 
 clean: ## Stop the stack and delete data
 	$(COMPOSE) down -v
+
+# Helm targets (chart lives in charts/uptime-monitor)
+RELEASE   ?= uptime
+NAMESPACE ?= uptime-monitor
+CHART     ?= charts/uptime-monitor
+
+helm-lint: ## Lint and render the Helm chart
+	helm lint $(CHART)
+	helm template $(RELEASE) $(CHART) -n $(NAMESPACE) > /dev/null
+
+helm-install: ## Install/upgrade the stack via Helm (override: ARGS="--set postgresql.password=...")
+	helm upgrade --install $(RELEASE) $(CHART) -n $(NAMESPACE) --create-namespace --wait $(ARGS)
+
+helm-uninstall: ## Remove the Helm release (PVC is kept)
+	helm uninstall $(RELEASE) -n $(NAMESPACE)

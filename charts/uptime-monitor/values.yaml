@@ -1,0 +1,62 @@
+# Shared app image (api, worker and migrate job all use it)
+image:
+  repository: ghcr.io/david-wagih/uptime-monitor
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Settings passed to the app as UPTIME_* env vars
+config:
+  checkIntervalSeconds: 15
+  checkTimeoutSeconds: 10
+
+api:
+  replicas: 1
+  port: 8000
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits:   { cpu: 200m, memory: 256Mi }
+  livenessProbe:
+    httpGet: { path: /healthz, port: http }
+    initialDelaySeconds: 25
+    periodSeconds: 10
+  readinessProbe:
+    httpGet: { path: /readyz, port: http }
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+worker:
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits:   { cpu: 200m, memory: 256Mi }
+
+migrate:
+  enabled: true
+  backoffLimit: 6
+
+# Bundled PostgreSQL. Set enabled=false and provide externalDatabase.url
+# (or externalDatabase.existingSecret) to use a managed database instead.
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 18-alpine
+  database: uptime_monitor
+  username: postgres
+  password: change-me   # override: --set postgresql.password=... (or use existingSecret)
+  persistence:
+    size: 1Gi
+    storageClass: ""
+  resources: {}
+
+externalDatabase:
+  url: ""              # e.g. postgresql+psycopg://user:pass@host:5432/db
+  existingSecret: ""   # secret holding key UPTIME_DATABASE_URL (skips chart-managed secret)
+
+# Optional bearer token for creating/deleting monitors (UPTIME_ADMIN_TOKEN)
+adminToken: ""

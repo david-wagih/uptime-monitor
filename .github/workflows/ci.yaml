@@ -64,6 +64,7 @@ jobs:
               image-ref:  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:scan
               severity: HIGH,CRITICAL
               ignore-unfixed: true
+              trivyignores: .trivyignore
               exit-code: '1'
           - name: Build and push Docker image
             uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -72,3 +73,39 @@ jobs:
               push: ${{ github.event_name != 'pull_request' }}
               tags: ${{ steps.meta.outputs.tags }}
               labels: ${{ steps.meta.outputs.labels }}
+    helm-chart:
+        runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          packages: write  # Enables pushing the chart to ghcr.io
+        needs: build-and-push  # chart's appVersion points at the image pushed above
+        env:
+          CHART_DIR: charts/uptime-monitor
+        steps:
+          - name: Checkout
+            uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+          # Helm is preinstalled on ubuntu-latest runners, so no extra action needed
+          - name: Lint chart
+            run: |
+              helm version
+              helm lint "$CHART_DIR"
+              helm template uptime "$CHART_DIR" > /dev/null
+
+          - name: Package chart
+            id: package
+            run: |
+              SHORT_SHA="${GITHUB_SHA::7}"
+              BASE_VERSION=$(yq '.version' "$CHART_DIR/Chart.yaml")
+              # Unique per-commit version; appVersion matches the image tag from metadata-action (type=sha)
+              VERSION="${BASE_VERSION}-sha-${SHORT_SHA}"
+              helm package "$CHART_DIR" --version "$VERSION" --app-version "sha-${SHORT_SHA}" -d dist
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          - name: Push chart to GHCR
+            if: github.event_name != 'pull_request'
+            run: |
+              OWNER="${GITHUB_REPOSITORY_OWNER,,}"  # OCI refs must be lowercase
+              echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login "${REGISTRY}" -u "${{ github.actor }}" --password-stdin
+              # Pushed under /charts so it doesn't collide with the image ghcr.io/<owner>/uptime-monitor
+              helm push dist/uptime-monitor-${{ steps.package.outputs.version }}.tgz "oci://${REGISTRY}/${OWNER}/charts"
